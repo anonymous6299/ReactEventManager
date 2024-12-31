@@ -27,7 +27,7 @@ This is the assignment submission for React Dev Internship as per the instructio
 - After completion, execute the command : npm run dev
 - Copy the URL and paste in any Web Browser and hit enter.
 
-### Links to deployed app (Vercel)
+### Links to deployed app (Vercel):
 - https://react-assignment-anonymous-projects-420743fe.vercel.app/
 - https://react-assignment-git-master-anonymous-projects-420743fe.vercel.app/
 
