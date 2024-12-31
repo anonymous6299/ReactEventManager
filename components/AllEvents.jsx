@@ -1,107 +1,220 @@
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    DialogClose
-} from "@/components/ui/dialog";
-import { Button } from "../src/components/ui/button";
+import { v4 as uuidv4 } from 'uuid';
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
+import UpdateModal from "./UpdateModal";
+import AddModal from "./AddModal";
+import EventCard from './EventCard';
 
 const AllEvents = (props) => {
+    //initialisations
     const { toast } = useToast();
-    const [Month, setMonth] = useState("");
     const [Event, setEvent] = useState({
+        id: 0,
         EventName: "",
         EventDesc: "",
         EventStTime: "",
         EventEndTime: "",
         EventDate: props.date,
         EventMonth: "",
+        Tag: ""
     });
-
+    const [EventArray, setEventArray] = useState([]);
     const [open, setOpen] = useState(false); // State to manage dialog visibility
-
+    // fetching events
     useEffect(() => {
         if (document.getElementById("monthname")) {
             const txt = document.getElementById("monthname").innerText;
-            setMonth(txt);
             setEvent((prevEvent) => ({
                 ...prevEvent,
                 EventDate: props.date, // Ensure this is set each time
                 EventMonth: txt,       // Set the updated Month value
             }));
         }
+        setEventArray([]);
+        const arr = JSON.parse(localStorage.getItem("AllEvents"));
+        const filteredEvents = arr.filter((ele) => ele.EventDate === props.date);
+        setEventArray(filteredEvents);
     }, [props.date]);
 
+    // add logic
     const onChange = (e) => {
         setEvent({ ...Event, [e.target.name]: e.target.value });
     };
 
     const onsubmit = (e) => {
         e.preventDefault();
-        const AllEvents = JSON.parse(localStorage.getItem("AllEvents")) || [];
-        localStorage.setItem("AllEvents", JSON.stringify([...AllEvents, Event]));
+        const AllEvents = JSON.parse(localStorage.getItem("AllEvents"));
+        // overlapping event check
+        const overlapevent = AllEvents.find((item) => {
+            return (item.EventDate === Event.EventDate && item.EventMonth === Event.EventMonth && item.EventStTime === Event.EventStTime && item.EventEndTime === Event.EventEndTime)
+        })
+        if (overlapevent) {
+            toast({
+                title: "Error! Event Overlap.",
+                description: "You cannot add 2 overlapping events.",
+                className: "bg-white",
+            });
+        }
+        else {
+            Event.id = uuidv4();
+            localStorage.setItem("AllEvents", JSON.stringify([...AllEvents, Event]));
+            setEventArray([...EventArray, Event])
+            // Show toast message
+            toast({
+                title: "Success! Added.",
+                description: "Event was successfully saved.",
+                className: "bg-white",
+            });
 
-        // Show toast message
+            // Close the dialog after submission
+            setOpen(false);
+        }
+    };
+    // Deletion Code
+    const deleteEvent = (id) => {
+        const events = JSON.parse(localStorage.getItem("AllEvents"))
+        let newarr = events.filter((item) => {
+            return item.id !== id;
+        });
+        localStorage.setItem("AllEvents", JSON.stringify(newarr));
+        newarr = newarr.filter((item) => {
+            return item.EventDate === props.date
+        })
+        setEventArray(newarr);
         toast({
-            title: "Success! Added.",
-            description: "Event was successfully saved.",
+            title: "Success! Deleted.",
+            description: "Event was successfully Deleted.",
             className: "bg-white",
         });
+    }
 
-        // Close the dialog after submission
-        setOpen(false);
-    };
+    // Updation Code
+    const [UpdationEvent, setUpdationEvent] = useState(null);
+    const [OpenUMod, setOpenUMod] = useState(false)
+    const fetchEvent = (id) => {
+        const events = JSON.parse(localStorage.getItem("AllEvents"));
+        const event = events.find((item) => item.id === id);
+        if (event) {
+            setUpdationEvent(event);
+            setOpenUMod(true);
+        }
+    }
+    const onUpdateChg = (e) => {
+        setUpdationEvent({ ...UpdationEvent, [e.target.name]: e.target.value });
+    }
+    const update = (e) => {
+        e.preventDefault();
+        let events = JSON.parse(localStorage.getItem("AllEvents"))
+        const event = events.find((item) => {
+            return item.id === UpdationEvent.id;
+        })
+        events[events.indexOf(event)] = UpdationEvent;
+        localStorage.setItem("AllEvents", JSON.stringify(events));
+        events = events.filter((item) => { return item.EventDate === props.date })
+        setEventArray(events);
+        setOpenUMod(false);
+        toast({
+            title: "Success! Updated.",
+            description: "Event was successfully Updated.",
+            className: "bg-white",
+        });
+    }
 
+    //search logic
+    const [Query, setQuery] = useState("");
+    const onSearch = (e) => {
+        setQuery(e.target.value)
+    }
+    const search = () => {
+        const events = JSON.parse(localStorage.getItem("AllEvents"));
+        const event = events.filter((item) => {
+            return item.EventName.toLowerCase() === Query.toLowerCase();
+        })
+        setQuery(event);
+    }
+
+    //export as json logic
+    const ExportAsJSON = (e) => {
+        e.preventDefault();
+        const events = JSON.parse(localStorage.getItem("AllEvents"));
+        const montheve = events.filter((item) => {
+            return item.EventMonth === Event.EventMonth
+        })
+        if (montheve.length !== 0) {
+            const jsondata = JSON.stringify(montheve, null, 2);
+            const blob = new Blob([jsondata], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Events${Event.EventMonth}.json`;
+            a.click();
+
+            // Clean up the URL object
+            URL.revokeObjectURL(url);
+        }
+        else {
+            toast({
+                title: "Error! No Data.",
+                description: "Please add events to download them.",
+                className: "bg-white",
+            });
+        }
+    }
     return (
         <>
             <div className="all-events text-gray-200 w-3/5">
-                <h1 className="text-3xl text-center w-full my-20 font-semibold">Events Added</h1>
-                <div className="w-fit mx-auto">
-                    <Dialog open={open} onOpenChange={setOpen}>
-                        <DialogTrigger className="w-fit mx-auto my-32">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={0.7} stroke="currentColor" className="border rounded-lg p-2 size-40 border-gray-700 mx-auto hover:bg-gray-800 hover:border-none">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                <div className="header flex justify-between items-center my-20 pl-12 pr-20">
+                    <h1 className="text-3xl text-center font-semibold">Events Added</h1>
+                    <div className="search flex w-fit items-center">
+                        <input type="text" className='w-64 h-8 rounded-l-lg bg-transparent border border-gray-700 px-6 focus:outline-none border-r-0 focus:ring focus:ring-gray-700' placeholder='Search by Name' name="query" id="query" autoComplete='off' value={!Array.isArray(Query) ? Query : ""} onChange={onSearch} />
+                        <button className='border border-gray-700 border-l-0 py-[5.2px] rounded-r-lg pr-4' onClick={search}>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5 opacity-50 hover:opacity-70">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                             </svg>
-                            <p className="text-sm my-2">Click to start adding events</p>
-                        </DialogTrigger>
-                        <DialogContent className="bg-gray-100 border-0">
-                            <DialogHeader>
-                                <DialogTitle>Add an Event</DialogTitle>
-                                <DialogDescription>
-                                    Date : {props.date} {Month}
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="time flex w-full justify-between space-x-4">
-                                <div className="inpstime flex flex-col space-y-1 w-full ">
-                                    <label htmlFor="StartTime">Event Starts</label>
-                                    <input type="time" id="StartTime" name="EventStTime" className="border border-gray-300 w-full rounded-md h-10 px-4 focus:outline-none focus:bg-white bg-transparent" value={Event.EventStTime} onChange={onChange} />
-                                </div>
-                                <div className="inpetime flex flex-col space-y-1 w-full ">
-                                    <label htmlFor="EndTime">Event Ends</label>
-                                    <input type="time" id="EndTime" name="EventEndTime" className="border border-gray-300 w-full rounded-md h-10 px-4 focus:outline-none focus:bg-white bg-transparent" value={Event.EventEndTime} onChange={onChange} />
-                                </div>
-                            </div>
-                            <div className="inptname space-y-1">
-                                <label htmlFor="EventName" className="text-gray-800">Event Name</label>
-                                <input type="text" id="EventName" name="EventName" className="border border-gray-300 w-full rounded-md h-10 px-4 focus:outline-none focus:bg-white bg-transparent" value={Event.EventName} onChange={onChange} autoComplete="off"/>
-                            </div>
-                            <div className="inptdesc space-y-1">
-                                <label htmlFor="EventDesc" className="text-gray-800">Description</label>
-                                <input type="text" id="EventDesc" name="EventDesc" className="border border-gray-300 w-full rounded-md h-10 px-4 focus:outline-none focus:bg-white bg-transparent" placeholder="Optional" value={Event.EventDesc} onChange={onChange} autoComplete="off"/>
-                            </div>
-                            <div className="w-full flex justify-end">
-                                <Button className="w-fit disabled:opacity-50" disabled={Event.EventName === "" || Event.EventEndTime === "" || Event.EventStTime === ""} onClick={onsubmit}>
-                                    Add Event
-                                </Button>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
+                        </button>
+
+                    </div>
+                </div>
+                <div className={`events flex flex-wrap items-center w-full justify-center overflow-y-scroll h-72 ${EventArray.length !== 0 ? "block" : "hidden"}`}>
+
+                    {EventArray.length !== 0 && !Array.isArray(Query) ?
+                        EventArray.map((item, index) => {
+                            return (
+                                <EventCard key={index} event={item} deleteEvent={deleteEvent} fetchEvent={fetchEvent} />
+                            );
+                        })
+                        : Query.length !== 0 ? Query.map((item, index) => {
+                            return (
+                                <EventCard key={index} event={item} deleteEvent={deleteEvent} fetchEvent={fetchEvent} />
+                            );
+                        }) : "No events match the given name"}
+                </div>
+                <div className="w-fit mx-auto">
+                    {/* dialog to update an event */}
+                    <UpdateModal props={{
+                        OpenUMod,
+                        setOpenUMod,
+                        UpdationEvent,
+                        onUpdateChg,
+                        update
+                    }} />
+                    {/* dialog to add an event */}
+                    <AddModal props={{
+                        open,
+                        setOpen,
+                        Event,
+                        onChange,
+                        onsubmit
+                    }} />
+                    {/* export as json button */}
+                    <button className={`border border-gray-700 absolute rounded-md px-2 py-2 hover:bg-gray-800 hover:border-0 ${EventArray.length!==0?"bottom-16":"bottom-[22.2rem]"}`} onClick={ExportAsJSON}>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={0.5} stroke="currentColor" className="size-36">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15" />
+                        </svg>
+
+                    </button>
+                    <p className='text-gray-50 -mt-[94px] ml-44'>Export as JSON</p>
                 </div>
             </div>
             <Toaster />

@@ -1,8 +1,31 @@
-# React + Vite
+# React Event Calendar Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the assignment submission for React Dev Internship as per the instructions.
 
-Currently, two official plugins are available:
+### Features integrated in the app are as follows: 
+- Calendar using grid system
+- CRUD operations on events
+- Displaying Events for a day
+- Use of localStorage to persist events between page refreshes.
+- UI components, except calendar, from shadcn. Like: toasts, cards, modals etc
+- Complex logic to filter events and prevent event overlap
+- Color coding for different events
+- Export events in JSON file.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### To run the app locally:
+> [!NOTE]
+> Install Git and Node.js first to run the app locally.
+- Create a folder. Navigate to folder and open it in terminal.
+- For windows, simply press Shift + RMB and click on "Open in Terminal"
+- Pull this GitHub repo by executing following one by one
+    - git init
+    - git add .
+    - git commit -m "first"
+    - git remote add origin git@github.com:anonymous6299/ReactAssignment.git
+    - git pull origin master
+- Now execute the command : npm install 
+- After completion, execute the command : npm run dev
+- Copy the URL and paste in any Web Browser and hit enter.
+
+### Link to deployed app
+
