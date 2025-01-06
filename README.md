@@ -1,6 +1,6 @@
 # React Event Calendar Application
 
-This is the assignment submission for React Dev Internship as per the instructions.
+This is the GitHub repo for React App.
 
 ### Features integrated in the app are as follows: 
 - Calendar using grid system
@@ -28,6 +28,4 @@ This is the assignment submission for React Dev Internship as per the instructio
 - Copy the URL and paste in any Web Browser and hit enter.
 
 ### Links to deployed app (Vercel):
-- https://react-assignment-anonymous-projects-420743fe.vercel.app/
-- https://react-assignment-git-master-anonymous-projects-420743fe.vercel.app/
 
